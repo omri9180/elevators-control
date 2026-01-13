@@ -1,0 +1,20 @@
+
+.board-main {
+    display: flex;
+    align-items: center;
+    background-color: #f2d1a5;
+    border: 2px solid #ccc;
+    border-radius: 10px;
+    padding: 20px;
+    height: 90vh;
+    justify-content: center;
+}
+
+.elevator-board{
+    display: flex;
+    flex-direction: column;
+    border: 2px solid #333;
+    padding: 10px 10px 10px 10px;
+
+    
+}

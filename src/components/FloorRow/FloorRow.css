@@ -1,0 +1,35 @@
+
+.board-row{
+    display: flex;
+    align-items: center;
+}
+
+.floorTitle{
+    width: 80px;
+    text-align: center;
+    font-weight: bold;
+    color: #555454;
+    margin-right: 10px;
+}
+
+.floor-row{
+    display: grid;
+    
+}
+
+.board-cell{
+    width: 80px;
+    height: 60px;
+    border: 1px solid #cfcfcf;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #fff;
+}
+
+.call-button{
+    width: 80px;
+    height: 30px;
+    cursor: pointer;
+    margin-left: 10px;
+}
