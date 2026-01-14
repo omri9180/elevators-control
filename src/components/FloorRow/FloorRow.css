@@ -33,3 +33,9 @@
     cursor: pointer;
     margin-left: 10px;
 }
+
+.elevator-icon {
+  width: 32px;
+  height: 32px;
+  transition: transform 1s linear;
+}
