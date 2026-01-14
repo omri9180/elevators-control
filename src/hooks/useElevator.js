@@ -27,6 +27,8 @@ export const useElevator = () => {
   useEffect(() => {
     const elevatorIntervals = setInterval(() => {
       state.elevators.forEach((elevator) => {
+        if (!elevator) return;
+
         if (elevator.targetFloors.length === 0) return;
 
         dispatch({
@@ -37,7 +39,7 @@ export const useElevator = () => {
         if (elevator.currentFloor === elevator.targetFloors[0]) {
           dispatch({
             type: "ARRIVE_FLOOR",
-            payload: { elevatorId: elevator.id },
+            payload: { elevatorId: elevator.id, floor: elevator.currentFloor },
           });
         }
       });
@@ -51,7 +53,17 @@ export const useElevator = () => {
 
   useEffect(() => {
     state.elevators.forEach((elevator) => {
-      if (elevator.status === "doors_open") {
+      if (!elevator) return;
+      if (elevator.status === "doors_open" && !elevator.doorsTimerStarted) {
+        dispatch({
+          type: "SET_STATUS",
+          payload: {
+            elevatorId: elevator.id,
+            status: "doors_open",
+            doorsTimerStarted: true,
+          },
+        });
+
         setTimeout(() => {
           dispatch({
             type: "SET_STATUS",

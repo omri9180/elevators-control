@@ -1,6 +1,7 @@
 import "./FloorRow.css";
 import { useElevator } from "../../hooks/useElevator";
 import liftIcon from "../../assets/lift.png";
+import bellIcon from "../../assets/bell.png";
 import { useEffect } from "react";
 
 const FloorRow = ({ numberOfFloors, numberOfElevators }) => {
@@ -39,7 +40,7 @@ const FloorRow = ({ numberOfFloors, numberOfElevators }) => {
                 { length: numberOfElevators },
                 (_, elevatorCellIndex) => {
                   const elevator = elevators[elevatorCellIndex];
-                  const elevatorArrived = elevator.currentFloor === floorNumber;
+                  const elevatorArrived = elevator &&elevator.currentFloor === floorNumber ;
 
                   return (
                     <div key={elevatorCellIndex} className="board-cell">
@@ -70,7 +71,7 @@ const FloorRow = ({ numberOfFloors, numberOfElevators }) => {
                 (call) => call.floor === floorNumber && !call.done
               )
                 ? "waiting"
-                : `Call ${floorNumber}`}
+                : <>call <img src={bellIcon} alt="Call Elevator Bell" className="elevator-bell-button"/></>}
             </button>
           </div>
         );

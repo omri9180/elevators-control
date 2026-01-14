@@ -42,6 +42,12 @@
     color: white;
 }
 
+.elevator-bell-button{
+  width: 15px;
+  height: 15px;
+  margin-left: 5px;
+}
+
 .elevator-icon {
   width: 32px;
   height: 32px;
