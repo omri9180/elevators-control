@@ -49,6 +49,26 @@ export const useElevator = () => {
     return () => clearInterval(elevatorIntervals);
   }, [state.elevators]);
 
+  useEffect(() => {
+    state.elevators.forEach((elevator) => {
+      if (elevator.status === "doors_open") {
+        setTimeout(() => {
+          dispatch({
+            type: "SET_STATUS",
+            payload: { elevatorId: elevator.id, status: "doors_closing" },
+          });
+
+          setTimeout(() => {
+            dispatch({
+              type: "SET_STATUS",
+              payload: { elevatorId: elevator.id, status: "idle" },
+            });
+          }, 2000);
+        }, 2000);
+      }
+    });
+  }, [state.elevators, dispatch]);
+
   return {
     elevators: state.elevators,
     callsQueue: state.callsQueue,

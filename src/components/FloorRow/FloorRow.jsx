@@ -1,16 +1,20 @@
 import "./FloorRow.css";
 import { useElevator } from "../../hooks/useElevator";
 import liftIcon from "../../assets/lift.png";
+import { useEffect } from "react";
 
 const FloorRow = ({ numberOfFloors, numberOfElevators }) => {
-  const { elevators, dispatch } = useElevator();
+  const { elevators, callsQueue, dispatch } = useElevator();
 
   const callElevator = (floor) => {
+    if (callsQueue.some((call) => call.floor === floor && !call.done)) return;
     dispatch({ type: "ADD_CALL", payload: { floor } });
 
-    dispatch({type: "ASSIGN_CALL", payload: {call: {floor}}});
+    dispatch({ type: "ASSIGN_CALL", payload: { call: { floor } } });
     console.log(`Elevator called to floor ${floor}`);
   };
+
+  useEffect(() => {}, [callsQueue]);
 
   return (
     <>
@@ -43,7 +47,7 @@ const FloorRow = ({ numberOfFloors, numberOfElevators }) => {
                         <img
                           src={liftIcon}
                           alt="elevator Icon"
-                          className="elevator-icon"
+                          className={`elevator-icon elevator-${elevator.status}`}
                         />
                       )}
                     </div>
@@ -54,9 +58,19 @@ const FloorRow = ({ numberOfFloors, numberOfElevators }) => {
 
             <button
               onClick={() => callElevator(floorNumber)}
-              className="call-button"
+              className={`call-button ${
+                callsQueue.some(
+                  (call) => call.floor === floorNumber && !call.done
+                )
+                  ? "waiting"
+                  : ""
+              }`}
             >
-              Call {floorNumber}
+              {callsQueue.some(
+                (call) => call.floor === floorNumber && !call.done
+              )
+                ? "waiting"
+                : `Call ${floorNumber}`}
             </button>
           </div>
         );

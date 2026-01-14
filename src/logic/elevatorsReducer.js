@@ -3,8 +3,8 @@ import { bestElevatorReducer } from "./callController";
 export const elevatorsReducer = (state, action) => {
   switch (action.type) {
     case "ADD_CALL": {
-        console.log("ADD_CALL:", action.payload.floor);
-  console.log("callsQueue before:", state.callsQueue);
+      console.log("ADD_CALL:", action.payload.floor);
+      console.log("callsQueue before:", state.callsQueue);
       const newCall = {
         floor: action.payload.floor,
         time: Date.now(),
@@ -16,18 +16,23 @@ export const elevatorsReducer = (state, action) => {
         ...state,
         callsQueue: [...state.callsQueue, newCall],
       };
-      
     }
     case "SET_STATUS": {
       const { elevatorId, status } = action.payload;
-
       return {
         ...state,
-        elevators: state.elevators.map((elevator) =>
-          elevator.id === elevatorId ? { ...elevator, status } : elevator
+        elevators: state.elevators.map((e) =>
+          e.id === elevatorId ? { ...e, status } : e
+        ),
+        callsQueue: state.callsQueue.map((call) =>
+          call.floor ===
+          state.elevators.find((e) => e.id === elevatorId)?.currentFloor
+            ? { ...call, done: true }
+            : call
         ),
       };
     }
+
     case "ASSIGN_CALL": {
       const { call } = action.payload;
 
@@ -66,13 +71,13 @@ export const elevatorsReducer = (state, action) => {
           else if (targetFloor < elevator.currentFloor) nextFloor--;
 
           if (nextFloor === targetFloor) {
-            return{
+            return {
               ...elevator,
               currentFloor: nextFloor,
               status: "doors_open",
               targetFloors: elevator.targetFloors.slice(1),
               direction: null,
-            }
+            };
           }
 
           return {
@@ -95,9 +100,16 @@ export const elevatorsReducer = (state, action) => {
                 ...elevator,
                 targetFloors: elevator.targetFloors.slice(1),
                 status: "doors_open",
+                done: false,
               }
             : elevator;
         }),
+        callsQueue: state.callsQueue.map((call) =>
+          call.floor ===
+          state.elevators.find((e) => e.id === elevatorId)?.currentFloor
+            ? { ...call, done: true }
+            : call
+        ),
       };
     }
     case "REMOVE_CALL": {
@@ -108,6 +120,7 @@ export const elevatorsReducer = (state, action) => {
       const { elevatorId, direction } = action.payload;
       return null;
     }
+
     default:
       return state;
   }

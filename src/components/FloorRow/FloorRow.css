@@ -32,10 +32,33 @@
     height: 30px;
     cursor: pointer;
     margin-left: 10px;
+    background-color: rgb(197, 241, 197);
+    border-radius: 5px;
+    color: black;
+}
+
+.call-button.waiting {
+    background-color: rgb(233, 102, 113);
+    color: white;
 }
 
 .elevator-icon {
   width: 32px;
   height: 32px;
   transition: transform 1s linear;
+}
+
+.elevator-icon.elevator-moving {
+    background-color: aqua;
+}
+
+.elevator-icon.elevator-idle {
+    background-color: rgb(152, 153, 153);
+}
+.elevator-icon.elevator-doors_open {
+    background-color: greenyellow;
+}
+
+.elevator-icon.elevator-doors_closing {
+    background-color: rgb(250, 110, 157);
 }

@@ -1,4 +1,5 @@
 export const bestElevatorReducer = (elevator, callFloor) => {
+  if (elevator.length === 0) return null;
   const idleElevators = elevator.filter((e) => e.status === "idle");
 
   if (idleElevators.length > 0) {
@@ -6,7 +7,8 @@ export const bestElevatorReducer = (elevator, callFloor) => {
       Math.abs(curr.currentFloor - callFloor) <
       Math.abs(prev.currentFloor - callFloor)
         ? curr
-        : prev
+        : prev,
+        idleElevators[0]
     );
   }
 
@@ -27,5 +29,5 @@ export const bestElevatorReducer = (elevator, callFloor) => {
     );
   }
 
-  return elevator.length > 0 ? elevator[0] : null;
+  return elevator[0];
 };
