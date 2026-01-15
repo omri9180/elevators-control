@@ -3,32 +3,42 @@ import { bestElevatorReducer } from "./callController";
 export const elevatorsReducer = (state, action) => {
   switch (action.type) {
     case "ADD_CALL": {
-      console.log("ADD_CALL:", action.payload.floor);
-      console.log("callsQueue before:", state.callsQueue);
+      const { floor } = action.payload;
+
+      if (state.callsQueue.some((c) => c.floor === floor && !c.done))
+        return state;
+
+      const createdAt = Date.now();
+
       const newCall = {
-        floor: action.payload.floor,
-        time: Date.now(),
+        id: `${createdAt}-${Math.random().toString(16).slice(2)}`,
+        floor,
+        createdAt,
+        arrivedAt: null,
+        durationMs: null,
+        assignedTo: null,
         done: false,
       };
 
-      console.log("callsQueue after:", [...state.callsQueue, newCall]);
       return {
         ...state,
         callsQueue: [...state.callsQueue, newCall],
       };
     }
+
     case "SET_STATUS": {
-      const { elevatorId, status } = action.payload;
+      const { elevatorId, status, direction } = action.payload;
+
       return {
         ...state,
         elevators: state.elevators.map((e) =>
-          e.id === elevatorId ? { ...e, status } : e
-        ),
-        callsQueue: state.callsQueue.map((call) =>
-          call.floor ===
-          state.elevators.find((e) => e.id === elevatorId)?.currentFloor
-            ? { ...call, done: true }
-            : call
+          e.id === elevatorId
+            ? {
+                ...e,
+                status,
+                ...(direction !== undefined ? { direction } : {}),
+              }
+            : e
         ),
       };
     }
@@ -37,7 +47,6 @@ export const elevatorsReducer = (state, action) => {
       const { call } = action.payload;
 
       const bestElevator = bestElevatorReducer(state.elevators, call.floor);
-
       if (!bestElevator) return state;
 
       return {
@@ -56,71 +65,66 @@ export const elevatorsReducer = (state, action) => {
         ),
       };
     }
+
     case "MOVE_ELEVATOR": {
       const { elevatorId } = action.payload;
 
-      return {
-        ...state,
-        elevators: state.elevators.map((elevator) => {
-          if (elevator.id !== elevatorId || elevator.targetFloors.length === 0)
-            return elevator;
+      let arrivedFloor = null;
 
-          const targetFloor = elevator.targetFloors[0];
-          let nextFloor = elevator.currentFloor;
-          if (targetFloor > elevator.currentFloor) nextFloor++;
-          else if (targetFloor < elevator.currentFloor) nextFloor--;
+      const newElevators = state.elevators.map((elevator) => {
+        if (elevator.id !== elevatorId || elevator.targetFloors.length === 0)
+          return elevator;
 
-          if (nextFloor === targetFloor) {
-            return {
-              ...elevator,
-              currentFloor: nextFloor,
-              status: "doors_open",
-              targetFloors: elevator.targetFloors.slice(1),
-              direction: null,
-            };
-          }
+        const targetFloor = elevator.targetFloors[0];
+        let nextFloor = elevator.currentFloor;
 
+        if (targetFloor > elevator.currentFloor) nextFloor++;
+        else if (targetFloor < elevator.currentFloor) nextFloor--;
+
+        if (nextFloor === targetFloor) {
+          arrivedFloor = nextFloor;
           return {
             ...elevator,
             currentFloor: nextFloor,
-            status: "moving",
-            direction: nextFloor > elevator.currentFloor ? "up" : "down",
+            status: "doors_open",
+            targetFloors: elevator.targetFloors.slice(1),
+            direction: null,
           };
-        }),
-      };
-    }
-    case "ARRIVE_FLOOR": {
-      const { elevatorId } = action.payload;
+        }
+
+        return {
+          ...elevator,
+          currentFloor: nextFloor,
+          status: "moving",
+          direction: nextFloor > elevator.currentFloor ? "up" : "down",
+        };
+      });
+
+      if (arrivedFloor === null) {
+        return { ...state, elevators: newElevators };
+      }
+
+      const nowTime = Date.now();
+      const newCallsQueue = state.callsQueue.map((call) => {
+        if (call.done) return call;
+
+        if (call.floor !== arrivedFloor) return call;
+        if (call.assignedTo !== elevatorId) return call;
+
+        return {
+          ...call,
+          done: true,
+          arrivedAt: nowTime,
+          durationMs: nowTime - call.createdAt,
+        };
+      });
 
       return {
         ...state,
-        elevators: state.elevators.map((elevator) => {
-          elevator.id === elevatorId
-            ? {
-                ...elevator,
-                targetFloors: elevator.targetFloors.slice(1),
-                status: "doors_open",
-                done: false,
-              }
-            : elevator;
-        }),
-        callsQueue: state.callsQueue.map((call) =>
-          call.floor ===
-          state.elevators.find((e) => e.id === elevatorId)?.currentFloor
-            ? { ...call, done: true }
-            : call
-        ),
+        elevators: newElevators,
+        callsQueue: newCallsQueue,
       };
     }
-    case "REMOVE_CALL": {
-      const { callFloor } = action.payload;
-      return null;
-    }
-    case "SET_DIRECTION": {
-      const { elevatorId, direction } = action.payload;
-      return null;
-    }
-
     default:
       return state;
   }

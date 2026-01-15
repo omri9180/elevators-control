@@ -1,3 +1,4 @@
+import { ELEVATOR_TIME_MOVING,ELEVATOR_TIME_DOORS } from "./settings";
 export const bestElevatorReducer = (elevator, callFloor) => {
   if (elevator.length === 0) return null;
   const idleElevators = elevator.filter((e) => e.status === "idle");
@@ -31,3 +32,24 @@ export const bestElevatorReducer = (elevator, callFloor) => {
 
   return elevator[0];
 };
+
+const estimateTime = (elevator, callFloor) => {
+  const{ currentFloor, targetFloors, status } = elevator;
+
+  if(!targetFloors || targetFloors.length ===0){
+    return Math.abs(currentFloor-callFloor) * ELEVATOR_TIME_MOVING;
+  }
+
+  const doorsTime = status ==="doors_open" || status === "doors_closing" ? ELEVATOR_TIME_DOORS : 0;
+  
+  let time = doorsTime;
+  let elevatorFloor = currentFloor;
+
+  for(const floor of targetFloors){
+    time += Math.abs(elevatorFloor - floor) * ELEVATOR_TIME_MOVING;
+    time += ELEVATOR_TIME_DOORS;
+    elevatorFloor = floor;
+  }
+  time += Math.abs(elevatorFloor - callFloor) * ELEVATOR_TIME_MOVING;
+  return time;
+}

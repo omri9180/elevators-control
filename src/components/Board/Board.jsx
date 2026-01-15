@@ -1,9 +1,8 @@
 import "./Board.css";
 import FloorRow from "../FloorRow/FloorRow";
+import { NUMBER_OF_FLOORS, NUMBER_OF_ELEVATORS } from "../../logic/settings";
 
 const Board = () => {
-  const NUMBER_OF_FLOORS = 10;
-  const NUMBER_OF_ELEVATORS = 5;
 
   return (
     <div className="board-main">

@@ -1,12 +1,14 @@
-import { useReducer, useEffect } from "react";
+import { useReducer, useEffect, useRef } from "react";
 import { elevatorsReducer } from "../logic/elevatorsReducer";
-
-const FLOORS_NUM = 10;
-const ELEVATORS_NUM = 5;
-const ELEVATOR_TIME_MOVING = 1000;
+import elevatorSound from "../assets/sounds/elevator-ding-dong.mp3";
+import {
+  ELEVATOR_TIME_DOORS,
+  ELEVATOR_TIME_MOVING,
+  NUMBER_OF_ELEVATORS,
+} from "../logic/settings";
 
 const initializeElevators = () => {
-  return Array.from({ length: ELEVATORS_NUM }, (_, index) => ({
+  return Array.from({ length: NUMBER_OF_ELEVATORS }, (_, index) => ({
     id: index + 1,
     currentFloor: 0,
     targetFloors: [],
@@ -23,62 +25,112 @@ const initState = {
 
 export const useElevator = () => {
   const [state, dispatch] = useReducer(elevatorsReducer, initState);
+  const prevStatusRef = useRef([]);
+  const doorCloseRef = useRef({});
+  const doorTimersRef = useRef({});
+
+  const stateRef = useRef(state);
+  useEffect(() => {
+    stateRef.current = state;
+  }, [state]);
+
+  useEffect(() => {
+    state.elevators.forEach((elevator, i) => {
+      const prevStatus = prevStatusRef.current[i];
+      if (prevStatus !== "doors_open" && elevator.status === "doors_open") {
+        const sound = new Audio(elevatorSound);
+        sound.currentTime = 0;
+        sound.play();
+      }
+    });
+    prevStatusRef.current = state.elevators.map((e) => e.status);
+  }, [state.elevators]);
 
   useEffect(() => {
     const elevatorIntervals = setInterval(() => {
-      state.elevators.forEach((elevator) => {
-        if (!elevator) return;
+      const currentState = stateRef.current;
 
+      currentState.elevators.forEach((elevator) => {
+        if (!elevator) return;
         if (elevator.targetFloors.length === 0) return;
+
+        if (
+          elevator.status === "doors_open" ||
+          elevator.status === "doors_closing"
+        )
+          return;
 
         dispatch({
           type: "MOVE_ELEVATOR",
           payload: { elevatorId: elevator.id },
         });
-
-        if (elevator.currentFloor === elevator.targetFloors[0]) {
-          dispatch({
-            type: "ARRIVE_FLOOR",
-            payload: { elevatorId: elevator.id, floor: elevator.currentFloor },
-          });
-        }
       });
     }, ELEVATOR_TIME_MOVING);
 
-    console.log("Elevators state:", state.elevators);
-    console.log("Calls queue:", state.callsQueue);
-
     return () => clearInterval(elevatorIntervals);
-  }, [state.elevators]);
+  }, []);
+
+  const clearTimer = (elevatorId) => {
+    const time1 = doorTimersRef.current[`${elevatorId}_time1`];
+    const time2 = doorTimersRef.current[`${elevatorId}_time2`];
+
+    if (typeof time1 === "number") clearTimeout(time1);
+    if (typeof time2 === "number") clearTimeout(time2);
+
+    delete doorTimersRef.current[`${elevatorId}_time1`];
+    delete doorTimersRef.current[`${elevatorId}_time2`];
+    delete doorCloseRef.current[elevatorId];
+  };
 
   useEffect(() => {
     state.elevators.forEach((elevator) => {
       if (!elevator) return;
-      if (elevator.status === "doors_open" && !elevator.doorsTimerStarted) {
+      if (elevator.status !== "doors_open") return;
+      if (doorCloseRef.current[elevator.id]) return;
+      doorCloseRef.current[elevator.id] = true;
+
+      const time1 = setTimeout(() => {
         dispatch({
           type: "SET_STATUS",
-          payload: {
-            elevatorId: elevator.id,
-            status: "doors_open",
-            doorsTimerStarted: true,
-          },
+          payload: { elevatorId: elevator.id, status: "idle" },
         });
 
-        setTimeout(() => {
+        const time2 = setTimeout(() => {
+          const latest = stateRef.current.elevators.find(
+            (e) => e.id === elevator.id
+          );
+
+          const hasMoreTargets = !!latest && latest.targetFloors.length > 0;
+          const nextTarget = hasMoreTargets ? latest.targetFloors[0] : null;
+
           dispatch({
             type: "SET_STATUS",
-            payload: { elevatorId: elevator.id, status: "doors_closing" },
+            payload: {
+              elevatorId: elevator.id,
+              status: hasMoreTargets ? "moving" : "idle",
+              direction: hasMoreTargets
+                ? nextTarget > latest.currentFloor
+                  ? "up"
+                  : "down"
+                : null,
+            },
           });
 
-          setTimeout(() => {
-            dispatch({
-              type: "SET_STATUS",
-              payload: { elevatorId: elevator.id, status: "idle" },
-            });
-          }, 2000);
-        }, 2000);
-      }
+          clearTimer(elevator.id);
+        }, ELEVATOR_TIME_DOORS);
+
+        doorTimersRef.current[`${elevator.id}_time2`] = time2;
+      }, ELEVATOR_TIME_DOORS);
+
+      doorTimersRef.current[`${elevator.id}_time1`] = time1;
     });
+
+    // cleanup
+    return () => {
+      Object.keys(doorCloseRef.current).forEach((idStr) => {
+        clearTimer(Number(idStr));
+      });
+    };
   }, [state.elevators, dispatch]);
 
   return {

@@ -21,7 +21,7 @@ const FloorRow = ({ numberOfFloors, numberOfElevators }) => {
     <>
       {Array.from({ length: numberOfFloors }, (_, floorIndex) => {
         const floorNumber = numberOfFloors - floorIndex - 1;
-
+        
         return (
           <div key={floorIndex} className="board-row">
             <div className="floorTitle">
