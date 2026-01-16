@@ -27,7 +27,7 @@ export const elevatorsReducer = (state, action) => {
     }
 
     case "SET_STATUS": {
-      const { elevatorId, status, direction } = action.payload;
+      const { elevatorId, status } = action.payload;
 
       return {
         ...state,
@@ -36,7 +36,6 @@ export const elevatorsReducer = (state, action) => {
             ? {
                 ...e,
                 status,
-                ...(direction !== undefined ? { direction } : {}),
               }
             : e
         ),
@@ -88,7 +87,6 @@ export const elevatorsReducer = (state, action) => {
             currentFloor: nextFloor,
             status: "doors_open",
             targetFloors: elevator.targetFloors.slice(1),
-            direction: null,
           };
         }
 
@@ -96,7 +94,6 @@ export const elevatorsReducer = (state, action) => {
           ...elevator,
           currentFloor: nextFloor,
           status: "moving",
-          direction: nextFloor > elevator.currentFloor ? "up" : "down",
         };
       });
 
@@ -125,6 +122,18 @@ export const elevatorsReducer = (state, action) => {
         callsQueue: newCallsQueue,
       };
     }
+    case "CLEANUP_CALLS": {
+      const { olderThanMs } = action.payload;
+      const nowTime = Date.now();
+
+      return {
+        ...state,
+        callsQueue: state.callsQueue.filter(
+          (call) => nowTime - call.createdAt <= olderThanMs
+        ),
+      };
+    }
+
     default:
       return state;
   }

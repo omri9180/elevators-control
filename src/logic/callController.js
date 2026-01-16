@@ -1,55 +1,39 @@
-import { ELEVATOR_TIME_MOVING,ELEVATOR_TIME_DOORS } from "./settings";
+import { ELEVATOR_TIME_MOVING, ELEVATOR_TIME_DOORS } from "./settings";
+
 export const bestElevatorReducer = (elevator, callFloor) => {
-  if (elevator.length === 0) return null;
-  const idleElevators = elevator.filter((e) => e.status === "idle");
+  if (!elevator || elevator.length === 0) return null;
 
-  if (idleElevators.length > 0) {
-    return idleElevators.reduce((prev, curr) =>
-      Math.abs(curr.currentFloor - callFloor) <
-      Math.abs(prev.currentFloor - callFloor)
-        ? curr
-        : prev,
-        idleElevators[0]
-    );
-  }
+  const bestElevator = elevator.filter((e) => e.status !== "doors_open");
 
-  const movingElevators = elevator.filter(
-    (e) =>
-      (e.direction === "up" && e.currentFloor <= callFloor) ||
-      (e.direction === "down" && e.currentFloor >= callFloor)
-  );
+  const bestElevatorList = bestElevator.length > 0 ? bestElevator : elevator;
 
-  if (movingElevators.length > 0) {
-    return movingElevators.reduce(
-      (prev, curr) =>
-        Math.abs(curr.currentFloor - callFloor) <
-        Math.abs(prev.currentFloor - callFloor)
-          ? curr
-          : prev,
-      movingElevators[0]
-    );
-  }
-
-  return elevator[0];
+  return bestElevatorList.reduce((best, curr) => {
+    const bestTime = estimateTime(best, callFloor);
+    const currTime = estimateTime(curr, callFloor);
+    return currTime < bestTime ? curr : best;
+  }, bestElevatorList[0]);
 };
 
-const estimateTime = (elevator, callFloor) => {
-  const{ currentFloor, targetFloors, status } = elevator;
+export const estimateTime = (elevator, callFloor) => {
+  const { currentFloor, targetFloors, status } = elevator;
 
-  if(!targetFloors || targetFloors.length ===0){
-    return Math.abs(currentFloor-callFloor) * ELEVATOR_TIME_MOVING;
+  if (!targetFloors || targetFloors.length === 0) {
+    return Math.abs(currentFloor - callFloor) * ELEVATOR_TIME_MOVING;
   }
 
-  const doorsTime = status ==="doors_open" || status === "doors_closing" ? ELEVATOR_TIME_DOORS : 0;
-  
+  const doorsTime =
+    status === "doors_open" || status === "doors_closing"
+      ? ELEVATOR_TIME_DOORS
+      : 0;
+
   let time = doorsTime;
   let elevatorFloor = currentFloor;
 
-  for(const floor of targetFloors){
+  for (const floor of targetFloors) {
     time += Math.abs(elevatorFloor - floor) * ELEVATOR_TIME_MOVING;
     time += ELEVATOR_TIME_DOORS;
     elevatorFloor = floor;
   }
   time += Math.abs(elevatorFloor - callFloor) * ELEVATOR_TIME_MOVING;
   return time;
-}
+};

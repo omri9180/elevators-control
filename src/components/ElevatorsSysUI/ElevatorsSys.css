@@ -1,0 +1,102 @@
+.board-row {
+  display: flex;
+  align-items: center;
+}
+.board-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding-top: -10px;
+}
+
+.floorTitle {
+  width: 80px;
+  text-align: center;
+  font-weight: bold;
+  color: #555454;
+  margin-right: 10px;
+}
+
+.floor-row {
+  display: grid;
+  position: relative;
+}
+
+.shaft-overlay {
+  position: absolute;
+  top: 0;
+  left: 90px;
+  width: calc(90px * 5);
+  height: calc(60px * 10);
+  pointer-events: none;
+  margin: 10px 0 0 0;
+  z-index: 999;
+}
+
+.shaft-elevator {
+  position: absolute;
+  width: 90px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 1s linear;
+}
+
+.shaft-elevator img {
+  width: 32px;
+  height: 32px;
+}
+
+.duration-show {
+  font-size: 13px;
+  font-weight: bold;
+  color: #020202;
+}
+.board-cell {
+  width: 90px;
+  height: 60px;
+  border: 1px solid #cfcfcf;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #fff;
+}
+
+.call-button {
+  width: 80px;
+  height: 30px;
+  cursor: pointer;
+  margin-left: 10px;
+  background-color: rgb(197, 241, 197);
+  border-radius: 5px;
+  color: black;
+}
+
+.call-button.waiting {
+  background-color: rgb(233, 102, 113);
+  color: white;
+}
+
+.elevator-bell-button {
+  width: 15px;
+  height: 15px;
+  margin-left: 5px;
+}
+
+.elevator-icon {
+  width: 32px;
+  height: 32px;
+  transition: transform 1s linear;
+}
+
+.elevator-icon.elevator-moving {
+  background-color: aqua;
+}
+
+.elevator-icon.elevator-idle {
+  background-color: rgb(152, 153, 153);
+}
+.elevator-icon.elevator-doors_open {
+  background-color: greenyellow;
+}

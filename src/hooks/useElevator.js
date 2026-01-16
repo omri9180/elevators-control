@@ -5,6 +5,7 @@ import {
   ELEVATOR_TIME_DOORS,
   ELEVATOR_TIME_MOVING,
   NUMBER_OF_ELEVATORS,
+  CALL_CLEANUP_TIME,
 } from "../logic/settings";
 
 const initializeElevators = () => {
@@ -12,9 +13,7 @@ const initializeElevators = () => {
     id: index + 1,
     currentFloor: 0,
     targetFloors: [],
-    direction: "up",
     status: "idle",
-    lastCallTime: null,
   }));
 };
 
@@ -30,6 +29,18 @@ export const useElevator = () => {
   const doorTimersRef = useRef({});
 
   const stateRef = useRef(state);
+
+  useEffect(() => {
+    const cleanupCallsInterval = setInterval(() => {
+      dispatch({
+        type: "CLEANUP_CALLS",
+        payload: { olderThanMs: CALL_CLEANUP_TIME },
+      });
+    }, CALL_CLEANUP_TIME);
+
+    return () => clearInterval(cleanupCallsInterval);
+  }, []);
+
   useEffect(() => {
     stateRef.current = state;
   }, [state]);
@@ -101,18 +112,12 @@ export const useElevator = () => {
           );
 
           const hasMoreTargets = !!latest && latest.targetFloors.length > 0;
-          const nextTarget = hasMoreTargets ? latest.targetFloors[0] : null;
 
           dispatch({
             type: "SET_STATUS",
             payload: {
               elevatorId: elevator.id,
               status: hasMoreTargets ? "moving" : "idle",
-              direction: hasMoreTargets
-                ? nextTarget > latest.currentFloor
-                  ? "up"
-                  : "down"
-                : null,
             },
           });
 
@@ -125,7 +130,6 @@ export const useElevator = () => {
       doorTimersRef.current[`${elevator.id}_time1`] = time1;
     });
 
-    // cleanup
     return () => {
       Object.keys(doorCloseRef.current).forEach((idStr) => {
         clearTimer(Number(idStr));
