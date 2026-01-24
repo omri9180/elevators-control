@@ -5,7 +5,7 @@ import bellIcon from "../../assets/bell.png";
 import { useEffect, useState } from "react";
 import { estimateTime } from "../../logic/callController";
 
-const FloorRow = ({ numberOfFloors, numberOfElevators }) => {
+const ElevatorsSys = ({ numberOfFloors, numberOfElevators }) => {
   const { elevators, callsQueue, dispatch } = useElevator();
   const [showTime, setShowTime] = useState({});
 
@@ -150,4 +150,4 @@ const FloorRow = ({ numberOfFloors, numberOfElevators }) => {
   );
 };
 
-export default FloorRow;
+export default ElevatorsSys;
